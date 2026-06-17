@@ -1,0 +1,69 @@
+DATA QUALITY SUMMARY - Bluestock MF Capstone
+==================================================
+
+01_fund_master.csv
+  Shape: (40, 15)
+  Total null values: 0
+  Duplicate rows: 0
+
+02_nav_history.csv
+  Shape: (46000, 3)
+  Total null values: 0
+  Duplicate rows: 0
+
+03_aum_by_fund_house.csv
+  Shape: (90, 5)
+  Total null values: 0
+  Duplicate rows: 0
+
+04_monthly_sip_inflows.csv
+  Shape: (48, 6)
+  Total null values: 12
+  Columns with nulls: {'yoy_growth_pct': 12}
+  Duplicate rows: 0
+
+05_category_inflows.csv
+  Shape: (144, 3)
+  Total null values: 0
+  Duplicate rows: 0
+
+06_industry_folio_count.csv
+  Shape: (21, 6)
+  Total null values: 0
+  Duplicate rows: 0
+
+07_scheme_performance.csv
+  Shape: (40, 19)
+  Total null values: 0
+  Duplicate rows: 0
+
+08_investor_transactions.csv
+  Shape: (32778, 13)
+  Total null values: 0
+  Duplicate rows: 0
+
+09_portfolio_holdings.csv
+  Shape: (322, 8)
+  Total null values: 0
+  Duplicate rows: 0
+
+10_benchmark_indices.csv
+  Shape: (8050, 3)
+  Total null values: 0
+  Duplicate rows: 0
+
+
+AMFI CODE VALIDATION
+  Valid codes in fund_master: 40
+  Unique codes in nav_history: 40
+  Codes in nav_history NOT in fund_master: []
+  Unique codes in investor_transactions: 40
+  Codes in investor_transactions NOT in fund_master: []
+
+
+FUND MASTER EXPLORATION
+  Unique fund houses (10): ['Aditya Birla Sun Life MF', 'Axis Mutual Fund', 'DSP Mutual Fund', 'HDFC Mutual Fund', 'ICICI Prudential MF', 'Kotak Mahindra MF', 'Mirae Asset MF', 'Nippon India MF', 'SBI Mutual Fund', 'UTI Mutual Fund']
+  Unique categories (2): ['Debt', 'Equity']
+  Unique sub-categories (12): ['ELSS', 'Flexi Cap', 'Gilt', 'Index', 'Index/ETF', 'Large & Mid Cap', 'Large Cap', 'Liquid', 'Mid Cap', 'Short Duration', 'Small Cap', 'Value']
+  Unique risk categories (5): ['High', 'Low', 'Moderate', 'Moderately High', 'Very High']
+  AMFI code range: 100016 - 149324
