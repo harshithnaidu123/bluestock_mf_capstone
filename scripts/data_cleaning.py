@@ -165,6 +165,91 @@ def clean_scheme_performance() -> pd.DataFrame:
     return df
 
 
+def clean_remaining_datasets() -> dict[str, pd.DataFrame]:
+    """Clean the remaining 7 datasets that need only light cleaning:
+    date parsing and null/duplicate checks. Returns a dict mapping
+    output filename (without extension) to the cleaned DataFrame.
+
+    Datasets handled:
+        01_fund_master, 03_aum_by_fund_house, 04_monthly_sip_inflows,
+        05_category_inflows, 06_industry_folio_count,
+        09_portfolio_holdings, 10_benchmark_indices.
+
+    Returns:
+        Dict of {output_name: cleaned_dataframe}.
+    """
+    cleaned: dict[str, pd.DataFrame] = {}
+
+    # 01_fund_master - no date columns need parsing except launch_date
+    df = pd.read_csv(RAW_DIR / "01_fund_master.csv")
+    df["launch_date"] = pd.to_datetime(df["launch_date"], errors="coerce")
+    df = df.drop_duplicates()
+    cleaned["fund_master"] = df
+    print(f"  fund_master: {len(df)} rows")
+
+    # 03_aum_by_fund_house
+    df = pd.read_csv(RAW_DIR / "03_aum_by_fund_house.csv")
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    df = df.drop_duplicates()
+    cleaned["aum_by_fund_house"] = df
+    print(f"  aum_by_fund_house: {len(df)} rows")
+
+    # 04_monthly_sip_inflows - "month" column is in YYYY-MM format
+    df = pd.read_csv(RAW_DIR / "04_monthly_sip_inflows.csv")
+    df["month"] = pd.to_datetime(df["month"], format="%Y-%m", errors="coerce")
+    df = df.drop_duplicates()
+    cleaned["monthly_sip_inflows"] = df
+    print(
+        f"  monthly_sip_inflows: {len(df)} rows "
+        f"({df['yoy_growth_pct'].isna().sum()} NaN in yoy_growth_pct - expected, "
+        f"first 12 months have no prior year to compare)"
+    )
+
+    # 05_category_inflows - "month" column is in YYYY-MM format
+    df = pd.read_csv(RAW_DIR / "05_category_inflows.csv")
+    df["month"] = pd.to_datetime(df["month"], format="%Y-%m", errors="coerce")
+    df = df.drop_duplicates()
+    cleaned["category_inflows"] = df
+    print(f"  category_inflows: {len(df)} rows")
+
+    # 06_industry_folio_count - "month" column is in YYYY-MM format
+    df = pd.read_csv(RAW_DIR / "06_industry_folio_count.csv")
+    df["month"] = pd.to_datetime(df["month"], format="%Y-%m", errors="coerce")
+    df = df.drop_duplicates()
+    cleaned["industry_folio_count"] = df
+    print(f"  industry_folio_count: {len(df)} rows")
+
+    # 09_portfolio_holdings
+    df = pd.read_csv(RAW_DIR / "09_portfolio_holdings.csv")
+    df["portfolio_date"] = pd.to_datetime(df["portfolio_date"], errors="coerce")
+    df = df.drop_duplicates()
+    # Sanity check: weight_pct per fund should sum close to 100%
+    weight_sums = df.groupby("amfi_code")["weight_pct"].sum()
+    odd_funds = weight_sums[(weight_sums < 50) | (weight_sums > 100)]
+    if len(odd_funds) > 0:
+        print(
+            f"  NOTE: {len(odd_funds)} funds have total holdings weight outside 50-100% "
+            f"(may be partial holdings disclosure, not necessarily an error)"
+        )
+    cleaned["portfolio_holdings"] = df
+    print(f"  portfolio_holdings: {len(df)} rows")
+
+    # 10_benchmark_indices
+    df = pd.read_csv(RAW_DIR / "10_benchmark_indices.csv")
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    df = df.drop_duplicates()
+    invalid_close = (df["close_value"] <= 0).sum()
+    if invalid_close > 0:
+        print(f"  WARNING: {invalid_close} rows have close_value <= 0")
+    cleaned["benchmark_indices"] = df
+    print(
+        f"  benchmark_indices: {len(df)} rows, "
+        f"index names: {sorted(df['index_name'].unique())}"
+    )
+
+    return cleaned
+
+
 def main() -> None:
     """Run all cleaning functions and save outputs to data/processed/."""
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
@@ -184,6 +269,15 @@ def main() -> None:
     perf_clean.to_csv(PROCESSED_DIR / "clean_scheme_performance.csv", index=False)
     print(f"  Saved to {PROCESSED_DIR / 'clean_scheme_performance.csv'}")
 
+    print("\nCleaning remaining 7 datasets...")
+    remaining = clean_remaining_datasets()
+    for name, df in remaining.items():
+        out_path = PROCESSED_DIR / f"clean_{name}.csv"
+        df.to_csv(out_path, index=False)
+        print(f"  Saved {name} to {out_path}")
+
+    print("\nAll 10 datasets cleaned and saved to data/processed/")
+
 
 if __name__ == "__main__":
-    main()
+    main() 
